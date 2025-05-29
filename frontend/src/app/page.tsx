@@ -33,11 +33,13 @@ export default function HomePage() {
   }, [])
 
   useEffect(() => {
-  if (user) {
+  const saudacaoJaExibida = sessionStorage.getItem('ezra-saudacao-ja-exibida')
+  if (user && !saudacaoJaExibida) {
     const saudacao = `Shalom! 🙌 Bem-vindo ao Ezra.\n\nEstas são as palavras-chave que ativam modos especiais de inteligência:\n\n- analise → usa o modelo Llama Scout, focado em respostas técnicas, jurídicas e análises diretas.\n- classifique → ativa o BERT, ideal para interpretações semânticas e classificações inteligentes de texto.\n- olhe → ativa a CNN (visão computacional), usada quando você envia uma imagem para análise visual.\n- relatório → aumenta o espaço de resposta para gerar relatórios longos e detalhados.`
     alert(saudacao)
+    sessionStorage.setItem('ezra-saudacao-ja-exibida', 'true')
   }
-}, [user, messages.length])
+}, [user])
 
   const handleLogin = async () => {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password })
