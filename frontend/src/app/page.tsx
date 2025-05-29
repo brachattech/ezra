@@ -110,7 +110,7 @@ export default function HomePage() {
         <input
           type="email"
           placeholder="Email"
-          className="w-full p-2 border rounded mb-2 text-sm bg-purple-700 text-white placeholder-purple-300"
+          className="w-full p-2 border rounded mb-2 text-sm bg-purple-700 text-black placeholder-purple-300"
           value={email}
           onChange={e => setEmail(e.target.value)}
           autoComplete="username"
@@ -119,18 +119,18 @@ export default function HomePage() {
         <input
           type="password"
           placeholder="Senha"
-          className="w-full p-2 border rounded mb-2 text-sm bg-purple-700 text-white placeholder-purple-300"
+          className="w-full p-2 border rounded mb-2 text-sm bg-purple-700 text-black placeholder-purple-300"
           value={password}
           onChange={e => setPassword(e.target.value)}
           autoComplete={isSigningUp ? 'new-password' : 'current-password'}
         />
 
         {isSigningUp ? (
-          <button onClick={handleSignUp} className="w-full bg-green-600 text-white p-2 rounded text-sm hover:bg-green-700">
+          <button onClick={handleSignUp} className="w-full bg-green-600 text-black p-2 rounded text-sm hover:bg-green-700">
             Cadastrar
           </button>
         ) : (
-          <button onClick={handleLogin} className="w-full bg-purple-600 text-white p-2 rounded text-sm hover:bg-purple-700">
+          <button onClick={handleLogin} className="w-full bg-purple-600 text-black p-2 rounded text-sm hover:bg-purple-700">
             Entrar
           </button>
         )}
@@ -172,7 +172,7 @@ export default function HomePage() {
               )}
               <div
                 className={`max-w-[70%] px-4 py-2 rounded-3xl break-words text-sm ${
-                  isUser ? 'bg-green-500 text-white self-end ml-auto' : 'bg-blue-500 text-white self-start mr-auto'
+                  isUser ? 'bg-green-500 text-black self-end ml-auto' : 'bg-blue-500 text-white self-start mr-auto'
                 }`}
                 style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word', marginBottom: '1rem' }}
               >
