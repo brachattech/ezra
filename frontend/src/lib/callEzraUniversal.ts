@@ -1,4 +1,4 @@
-type ModelType = 'auto' | 'scout' | 'maverickturbo-free' | 'bert' | 'cnn'
+type ModelType = 'auto' | 'scout' | 'maverickturbo-free' | 'bert' | 'cnn' | 'llama'
 
 interface EzraOptions {
   prompt: string
