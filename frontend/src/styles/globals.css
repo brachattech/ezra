@@ -1,0 +1,73 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+/* Fundo geral da página */
+body {
+  background-color: #4b0082; /* ou purple se preferir mais claro */
+}
+
+/* Estilo geral para todos os botões icônicos */
+.icon-button {
+  width: 50px;
+  height: 50px;
+  background-color: rgba(0, 0, 0, 0.3); /* botão com fundo escuro translúcido */
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.3s ease, transform 0.2s ease;
+  box-shadow: 0 0 5px rgba(255, 255, 255, 0.2);
+}
+
+.icon-button:hover {
+  transform: scale(1.05);
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Estilo específico para ícones dentro dos botões */
+.icon-button svg {
+  width: 24px;
+  height: 24px;
+  fill: white;
+}
+
+/* Estilo para o botão "Sign Out" */
+.signout-button {
+  background-color: rgba(0, 0, 0, 0.6);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 9999px; /* totalmente arredondado */
+  font-size: 14px;
+  transition: background 0.3s ease;
+}
+
+.signout-button:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Caixa de mensagem */
+textarea {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: white;
+  border-radius: 12px;
+  padding: 12px;
+  resize: none;
+  border: none;
+  outline: none;
+}
+
+textarea::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+/* Ajuste para textos em geral */
+.text-white {
+  color: white;
+}
