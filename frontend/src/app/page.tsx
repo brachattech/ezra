@@ -33,13 +33,15 @@ export default function HomePage() {
   }, [])
 
   useEffect(() => {
-  const saudacaoJaExibida = sessionStorage.getItem('ezra-saudacao-ja-exibida')
-  if (user && !saudacaoJaExibida) {
-    const saudacao = `Shalom! 🙌 Bem-vindo ao Ezra.\n\nEstas são as palavras-chave que ativam modos especiais de inteligência:\n\n- analise → usa o modelo Llama Scout, focado em respostas técnicas, jurídicas e análises diretas.\n- classifique → ativa o BERT, ideal para interpretações semânticas e classificações inteligentes de texto.\n- olhe → ativa a CNN (visão computacional), usada quando você envia uma imagem para análise visual.\n- relatório → aumenta o espaço de resposta para gerar relatórios longos e detalhados.`
-    alert(saudacao)
-    sessionStorage.setItem('ezra-saudacao-ja-exibida', 'true')
-  }
-}, [user])
+    const saudacaoJaExibida = sessionStorage.getItem('ezra-saudacao-ja-exibida')
+    if (user && !saudacaoJaExibida) {
+      const saudacao = `Shalom! 🙌 Bem-vindo ao Ezra.\n\nEstas são as palavras-chave que ativam modos especiais de inteligência:\n\n- analise → usa o modelo Llama Scout, focado em respostas técnicas, jurídicas e análises diretas.\n- classifique → ativa o BERT, ideal para interpretações semânticas e classificações inteligentes de texto.\n- olhe → ativa a CNN (visão computacional), usada quando você envia uma imagem para análise visual.\n- relatório → aumenta o espaço de resposta para gerar relatórios longos e detalhados.`
+      alert(saudacao)
+      sessionStorage.setItem('ezra-saudacao-ja-exibida', 'true')
+    }
+  }, [user])
+
+  const detectFixeNaMemoria = (message: string) => message.toLowerCase().includes('fixe na memória')
 
   const handleLogin = async () => {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password })
@@ -67,12 +69,29 @@ export default function HomePage() {
     setHistory(prev => [...prev, { sender: 'Usuário', message: msg }])
     setIsTyping(true)
     try {
-      const responseText = await callEzraUniversal({
-      prompt: msg,
-      model: 'auto'
-    })
+      const responseText = await callEzraUniversal({ prompt: msg, model: 'auto' })
       setMessages(prev => [...prev, `Ezra: ${responseText || 'Sem resposta'}`])
       setHistory(prev => [...prev, { sender: 'Ezra', message: responseText || 'Sem resposta' }])
+
+      // Verificar e salvar memória
+      if (detectFixeNaMemoria(msg)) {
+        const filtered = [...history]
+        let collected: { sender: string; message: string }[] = []
+        for (let i = filtered.length - 1; i >= 0; i--) {
+          if (detectFixeNaMemoria(filtered[i].message)) break
+          collected.unshift(filtered[i])
+        }
+        const specialty = collected.reverse().find(m => m.message.includes('como'))?.message.split('como')[1]?.trim() ?? null
+        const summary = `${specialty ? `[Resumo especializado: ${specialty}]\n` : ''}${collected.reverse().map(m => `${m.sender}: ${m.message}`).join('\n')}`
+        const { error } = await supabase.from('memorias').insert({
+          user_id: user?.id,
+          autor: 'Ezra',
+          conteudo: summary,
+          timestamp: new Date().toISOString()
+        })
+        if (error) console.error('Erro ao salvar memória:', error.message)
+        else console.log('Memória salva.')
+      }
     } catch (error) {
       setMessages(prev => [...prev, `Erro ao obter resposta: ${error}`])
       setHistory(prev => [...prev, { sender: 'Ezra', message: `Erro ao obter resposta: ${error}` }])

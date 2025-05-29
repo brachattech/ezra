@@ -1,5 +1,18 @@
+
 # memory_handler.py
 # Ezra - Sistema de Memória Manual com Especialidades Temporárias
+
+from supabase import create_client, Client
+import os
+from dotenv import load_dotenv
+
+# Carregar variáveis de ambiente
+load_dotenv()
+
+# Configurações do Supabase
+SUPABASE_URL = os.getenv("SUPABASE_URL", "https://<sua-instancia>.supabase.co")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY", "<sua-chave-api-secreta>")
+supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 def detect_fixe_na_memoria(message):
     return "fixe na memória" in message.lower()
@@ -22,8 +35,27 @@ def generate_summary(messages, specialty=None):
     return summary.strip()
 
 def save_to_memory(customer_id, sender, message):
-    print(f"Salvando para {customer_id}: [{sender}] {message}")
+    print("📤 Tentando salvar memória no Supabase...")
+    print(f"📌 URL: {SUPABASE_URL}")
+    print(f"🔑 KEY prefixo: {SUPABASE_KEY[:6]}...")
+    print(f"📄 Dados: customer_id={customer_id}, sender={sender}")
 
+    data = {
+        "customer_id": customer_id,
+        "sender": sender,
+        "message": message
+    }
+
+    response = supabase.table("agent_settings").insert(data).execute()
+
+    if response.error:
+        print("❌ Erro ao salvar no Supabase:")
+        print(response.error)
+        raise Exception(f"Erro ao salvar no Supabase: {response.error.message}")
+    
+    print(f"✅ Memória salva com sucesso para {customer_id}")
+
+# Teste local
 if __name__ == "__main__":
     history = [
         {'sender': 'Usuário', 'message': 'Olá Ezra'},
@@ -51,3 +83,4 @@ if __name__ == "__main__":
             save_to_memory("123e4567-e89b-12d3-a456-426614174000", "Ezra", summary)
         else:
             print("Resumo descartado.")
+

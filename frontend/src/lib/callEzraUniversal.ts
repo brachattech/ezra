@@ -26,12 +26,12 @@ Responda sempre com linguagem formal, em português, estruturada e segura.
   if (shouldUseScout) {
     selectedModel = 'meta-llama/Llama-4-Scout-17B-16E-Instruct-FP8'
   } else if (shouldUseBert) {
-    selectedModel = 'togethercomputer/m2-bert-80M-32k-retrieval'
+    selectedModel = 'togethercomputer/M2-BERT-Retrieval-32k'
   } else if (shouldUseCnn) {
     selectedModel = 'black-forest-labs/FLUX.1-Canny-dev'
   } else {
-    selectedModel = 'meta-llama/Llama-3.3-70B-Instruct-Turbo-Free'
-    fallbackModel = 'meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8'
+    selectedModel = 'meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo'
+    fallbackModel = 'meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo'
   }
 
   const approxPromptTokens = Math.ceil((prompt.length + systemPrompt.length) / 4)
