@@ -69,7 +69,7 @@ export default function HomePage() {
     try {
       const responseText = await callEzraUniversal({
       prompt: msg,
-      model: 'llama'
+      model: 'auto'
     })
       setMessages(prev => [...prev, `Ezra: ${responseText || 'Sem resposta'}`])
       setHistory(prev => [...prev, { sender: 'Ezra', message: responseText || 'Sem resposta' }])
