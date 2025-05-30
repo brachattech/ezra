@@ -1,5 +1,13 @@
 declare module 'react-speech-recognition' {
-  export const useSpeechRecognition: () => {
+  import { ComponentType } from 'react'
+
+  export interface SpeechRecognitionOptions {
+    continuous?: boolean
+    interimResults?: boolean
+    language?: string
+  }
+
+  export interface SpeechRecognitionHook {
     transcript: string
     listening: boolean
     resetTranscript: () => void
@@ -7,10 +15,12 @@ declare module 'react-speech-recognition' {
   }
 
   const SpeechRecognition: {
-    startListening: () => void
+    startListening: (options?: SpeechRecognitionOptions) => void
     stopListening: () => void
     abortListening: () => void
   }
+
+  export function useSpeechRecognition(): SpeechRecognitionHook
 
   export default SpeechRecognition
 }
