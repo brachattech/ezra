@@ -1,4 +1,4 @@
-type ModelType = 'auto' | 'scout' | 'bert' | 'cnn' | 'llama' | 'gpt4turbo' | 'qwen-coder'
+type ModelType = 'auto' | 'scout' | 'bert' | 'cnn' | 'llama' | 'deepseek-ai/DeepSeek-R1' | 'qwen-coder'
 
 interface EzraOptions {
   prompt: string
