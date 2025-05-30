@@ -3,10 +3,11 @@
 @tailwind utilities;
 
 html, body {
-  height: 100%;
+  min-height: 100vh;
   margin: 0;
   padding: 0;
 }
+
 
 /* Fundo geral da página */
 body {
@@ -67,7 +68,3 @@ textarea::placeholder {
   color: rgba(255, 255, 255, 0.4);
 }
 
-/* Ajuste para textos em geral */
-.text-white {
-  color: white;
-}

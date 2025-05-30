@@ -1,4 +1,4 @@
-type ModelType = 'auto' | 'scout' | 'maverickturbo-free' | 'bert' | 'cnn' | 'llama'
+type ModelType = 'auto' | 'scout' | 'bert' | 'cnn' | 'llama' | 'gpt4turbo' | 'qwen-coder'
 
 interface EzraOptions {
   prompt: string
@@ -7,28 +7,85 @@ interface EzraOptions {
 
 export async function callEzraUniversal({ prompt, model = 'auto' }: EzraOptions): Promise<string> {
   const systemPrompt = `
-Você é Ezra, um assistente executivo com inteligência comparável ao GPT-4. Atue com precisão jurídica, técnica e estratégica.
-Responda sempre com linguagem formal, em português, estruturada e segura.
+Você é Ezra, um assistente executivo com inteligência comparável ao GPT-4.
+
+Sua função é gerar documentos formais com excelência técnica e padrão internacional. Utilize sempre o português formal, organizado, direto e preciso, sem símbolos ou hashtags.
+
+1. Relatório Jurídico:
+- Comece com uma introdução explicando o objetivo do relatório.
+- Apresente a fundamentação legal com leis nacionais e internacionais relevantes.
+- Analise cláusulas, situações ou fatos com embasamento técnico.
+- Aponte riscos jurídicos, possíveis sanções e impactos.
+- Finalize com uma conclusão e recomendações jurídicas concretas.
+
+2. Relatório Pedagógico:
+- Estruture com: Introdução, Indicadores observados, Avaliações realizadas, Recomendações e Prognóstico.
+- Descreva claramente as dificuldades do aluno, sem juízo de valor.
+- Use termos técnicos da área educacional e pedagógica.
+
+3. Análise Contratual:
+- Inicie com o escopo da análise.
+- Detalhe cláusulas críticas, riscos, obrigações e inconsistências.
+- Apresente parecer técnico claro, separado por tópicos.
+- Finalize com conclusões e recomendações jurídicas.
+
+Nunca use hashtags. Nunca insira linguagem informal. Nunca misture áreas. Organize os textos com títulos e subtítulos claros. O foco é sempre entregar um documento técnico, internacionalmente padronizado.
   `.trim()
 
-  const lowerPrompt = prompt.toLowerCase()
+  function normalize(text: string): string {
+    return text
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/ç/g, 'c')
+      .replace(/[^a-z0-9\s]/gi, '')
+      .toLowerCase()
+  }
 
-  // Ativação por palavras-chave ou seleção direta
-  const shouldUseScout = model === 'scout' || (model === 'auto' && lowerPrompt.includes('analise'))
-  const shouldUseBert  = model === 'bert'  || (model === 'auto' && lowerPrompt.includes('classifique'))
-  const shouldUseCnn   = model === 'cnn'   || (model === 'auto' && lowerPrompt.includes('olhe'))
-  const isLongReport   = lowerPrompt.includes('relatório') || lowerPrompt.includes('relatorio')
+  const normalizedPrompt = normalize(prompt)
 
-  // 🧠 Escolha do modelo com fallback automático
+  const shouldUseGPT4 = model === 'deepseek-ai/DeepSeek-R1' || (
+    model === 'auto' &&
+    (
+      normalizedPrompt.includes('faca um relatorio juridico') ||
+      normalizedPrompt.includes('faca um relatorio pedagogico') ||
+      normalizedPrompt.includes('faca uma analise juridica')
+    )
+  )
+
+  const shouldUseBert = model === 'bert' || (
+    model === 'auto' && normalizedPrompt.includes('classifique')
+  )
+
+  const shouldUseCnn = model === 'cnn' || (
+    model === 'auto' && normalizedPrompt.includes('olhe')
+  )
+
+  const shouldUseQwenCoder = model === 'qwen-coder' || (
+    model === 'auto' &&
+    (
+      normalizedPrompt.includes('vamos codar') ||
+      normalizedPrompt.includes('gere o codigo') ||
+      normalizedPrompt.includes('refatore') ||
+      normalizedPrompt.includes('typescript') ||
+      normalizedPrompt.includes('python') ||
+      normalizedPrompt.includes('next') ||
+      normalizedPrompt.includes('react') ||
+      normalizedPrompt.includes('fastapi')
+    )
+  )
+
   let selectedModel: string
   let fallbackModel: string | null = null
 
-  if (shouldUseScout) {
-    selectedModel = 'meta-llama/Llama-4-Scout-17B-16E-Instruct-FP8'
+  if (shouldUseGPT4) {
+    selectedModel = 'deepseek-ai/DeepSeek-R1'
   } else if (shouldUseBert) {
-    selectedModel = 'togethercomputer/M2-BERT-Retrieval-32k'
+    selectedModel = 'togethercomputer/m2-bert-80M-32k-retrieval'
   } else if (shouldUseCnn) {
-    selectedModel = 'black-forest-labs/FLUX.1-Canny-dev'
+    selectedModel = 'black-forest-labs/FLUX1.1-pro'
+  } else if (shouldUseQwenCoder) {
+    selectedModel = 'Qwen/Qwen2.5-Coder-32B-Instruct'
+    fallbackModel = 'meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo'
   } else {
     selectedModel = 'meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo'
     fallbackModel = 'meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo'
@@ -36,15 +93,32 @@ Responda sempre com linguagem formal, em português, estruturada e segura.
 
   const approxPromptTokens = Math.ceil((prompt.length + systemPrompt.length) / 4)
   const maxModelTokens = 8192
-  const targetResponseTokens = isLongReport ? 6000 : 1500
-  const availableTokens = Math.max(512, Math.min(targetResponseTokens, maxModelTokens - approxPromptTokens))
+  const targetResponseTokens = normalizedPrompt.includes('relatorio') ? 6000 : 1500
+
+  let availableTokens: number
+  if (selectedModel.includes('bert')) {
+    availableTokens = 20
+  } else if (selectedModel.includes('FLUX') || selectedModel.includes('flux')) {
+    availableTokens = 1
+  } else {
+    availableTokens = Math.max(512, Math.min(targetResponseTokens, maxModelTokens - approxPromptTokens))
+  }
 
   async function tryFetch(modelToUse: string): Promise<string> {
-    const response = await fetch('/api/together-proxy', {
+    if (modelToUse.includes('FLUX') || modelToUse.includes('flux')) {
+      return '[🖼️ Modelo de imagem ativado. A resposta visual será tratada separadamente.]'
+    }
+
+    const isOpenAI = modelToUse.startsWith('openai:') || modelToUse === 'gpt-4-turbo'
+const proxyEndpoint = isOpenAI ? '/api/openai-proxy' : '/api/together-proxy'
+const modelName = isOpenAI ? modelToUse.replace('openai:', '') : modelToUse
+
+
+    const response = await fetch(proxyEndpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: modelToUse,
+        model: modelName,
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: prompt }
@@ -57,7 +131,7 @@ Responda sempre com linguagem formal, em português, estruturada e segura.
 
     if (!response.ok) {
       const errorText = await response.text()
-      console.error(`[Together API] Erro HTTP (${modelToUse}):`, errorText)
+      console.error(`[Ezra Proxy] Erro HTTP (${modelName}):`, errorText)
       throw new Error('Erro na requisição')
     }
 
@@ -66,14 +140,16 @@ Responda sempre com linguagem formal, em português, estruturada e segura.
   }
 
   try {
-    return await tryFetch(selectedModel)
+    const resposta = await tryFetch(selectedModel)
+    return `${selectedModel}:::${resposta}`
   } catch (error: any) {
     console.error(`[Ezra LLM] Erro no modelo ${selectedModel}:`, error.message)
 
     if (fallbackModel) {
       try {
         console.warn(`[Ezra LLM] Tentando fallback: ${fallbackModel}`)
-        return await tryFetch(fallbackModel)
+        const respostaFallback = await tryFetch(fallbackModel)
+        return `${fallbackModel}:::${respostaFallback}`
       } catch (fallbackError: any) {
         console.error(`[Ezra LLM] Fallback também falhou (${fallbackModel}):`, fallbackError.message)
       }
@@ -82,3 +158,4 @@ Responda sempre com linguagem formal, em português, estruturada e segura.
     return '[❌ Falha ao processar resposta com Ezra]'
   }
 }
+
